@@ -35,4 +35,5 @@ class Game {
         /*Log.w("asd", zeroRowIndex.toString())
         Log.w("asd", zeroColIndex.toString())*/
     }
+
 }

@@ -7,7 +7,4 @@
 
     <style name="Theme.FinalProject" parent="Base.Theme.FinalProject" />
 
-    <style name="CardViewStyle" >
-        <item name="cardCornerRadius"></item>
-    </style>
 </resources>
