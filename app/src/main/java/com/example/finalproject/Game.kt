@@ -36,4 +36,12 @@ class Game {
         Log.w("asd", zeroColIndex.toString())*/
     }
 
+    fun getBoardSize() : Int {
+        return boardSize
+    }
+
+    fun getValueAt(row: Int, col: Int) : Int {
+        return board[row][col]
+    }
+
 }
