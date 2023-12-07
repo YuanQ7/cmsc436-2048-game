@@ -31,10 +31,10 @@ class MainActivity : AppCompatActivity() {
 
         startBtn.setOnClickListener {
             if (sizeRg.checkedRadioButtonId != -1) {
-                var boardSize = if (sizeRg.checkedRadioButtonId == 0) {
+                val boardSize = if (sizeRg.checkedRadioButtonId == R.id.btn_3) {
                     // 3x3
                     3
-                } else if (sizeRg.checkedRadioButtonId == 1) {
+                } else if (sizeRg.checkedRadioButtonId == R.id.btn_4) {
                     // 4x4
                     4
                 } else {
