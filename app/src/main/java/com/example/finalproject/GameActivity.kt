@@ -1,5 +1,6 @@
 package com.example.finalproject
 
+import android.graphics.Color
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
@@ -7,9 +8,13 @@ import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.Button
+import android.widget.EditText
 import android.widget.GridLayout
+import android.widget.GridLayout.TEXT_ALIGNMENT_CENTER
+import android.widget.GridLayout.spec
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.get
 import androidx.core.widget.doOnTextChanged
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -66,22 +71,35 @@ class GameActivity : AppCompatActivity() {
         gameGl.rowCount = model.getBoardSize()
         gameGl.columnCount = model.getBoardSize()
 
-        // TODO: initialize grid with puzzle pieces
         for (i in 0 until gameGl.rowCount) {
 
             for (j in 0 until gameGl.rowCount) {
-                val button = Button(this)
-                button.text = "${model.getValueAt(i, j)}"
-
-                // Customize button properties if needed
-                button.layoutParams = GridLayout.LayoutParams().apply {
-                    width = GridLayout.LayoutParams.WRAP_CONTENT
-                    height = GridLayout.LayoutParams.WRAP_CONTENT
-                    setGravity(Gravity.CENTER_HORIZONTAL)
-                    setMargins(8, 8, 8, 8)
+                val text = TextView(this)
+                if(model.getValueAt(i, j) != 0) {
+                    text.text = model.getValueAt(i, j).toString()
+                } else {
+                    text.text = ""
                 }
 
-                gameGl.addView(button)
+                // Customize button properties if needed
+                text.layoutParams = GridLayout.LayoutParams().apply {
+                    width = GridLayout.LayoutParams.MATCH_PARENT
+                    height = GridLayout.LayoutParams.MATCH_PARENT
+                    text.setBackgroundColor(Color.LTGRAY)
+                    text.textSize = 30f
+                    text.gravity = Gravity.CENTER
+                    text.id = i * gameSize + j
+                }
+
+                val params = GridLayout.LayoutParams().apply {
+                    rowSpec = spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f)
+                    columnSpec = spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f)
+                    width = 0
+                    height = 0
+                    setMargins(4, 4, 4, 4)
+                }
+
+                gameGl.addView(text, params)
             }
         }
     }
@@ -94,6 +112,7 @@ class GameActivity : AppCompatActivity() {
         resetBtn.setOnClickListener {
             // there may be a better way to reset timer
             model.resetGame()
+            // TODO the grid needs to be updated
             timer.cancel()
             timer.onFinish()
             initTimer()
@@ -149,9 +168,15 @@ class GameActivity : AppCompatActivity() {
                 }
                 Log.w("test", "Fling direction: $direction")
 
+                var oldRowIdx = model.getRowIdx()
+                var oldColIdx = model.getColIdx()
                 if (model.makeMove(direction)) {
                     Log.w("test", "MOVE SUCCESS")
-                    // TODO: update view with moved piece
+                    var textSwap : TextView = gameGl.findViewById<TextView>(oldRowIdx * gameSize + oldColIdx)
+                    textSwap.text = model.getValueAt(oldRowIdx, oldColIdx).toString()
+                    var textZero : TextView = gameGl.findViewById<TextView>(model.getRowIdx() * gameSize + model.getColIdx())
+                    textZero.text = ""
+
                 } else {
                     Log.w("test", "MOVE FAIL")
                 }

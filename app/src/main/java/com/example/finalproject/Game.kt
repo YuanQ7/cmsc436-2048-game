@@ -152,4 +152,12 @@ class Game {
     fun resetGame() {
         newBoard(boardSize)
     }
+
+    fun getRowIdx() : Int {
+        return zeroRowIndex
+    }
+
+    fun getColIdx() : Int {
+        return zeroColIndex
+    }
 }
