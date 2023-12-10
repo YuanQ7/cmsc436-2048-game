@@ -6,11 +6,15 @@ import android.util.Log
 class Game {
 
     private var boardSize : Int
+    private lateinit var initialBoard : Array<Array<Int>>
     private lateinit var board : Array<Array<Int>>
 
-    var currTime = 0
-    var bestTime = 0
+    private var currTime = 0
+    private var bestTime = 0
         private set
+
+    // if the game has started, used to disabled gestures before the start button is pressed
+    var gameStarted = false
 
     // 0 is the empty square. keeping track of its
     // index makes it easier to figure out what values we need to swap.
@@ -18,13 +22,17 @@ class Game {
     private var zeroRowIndex : Int = 0
     private var zeroColIndex : Int = 0
 
+    // used to reset the zero indices
+    private var initialZeroRowIndex = 0
+    private var initialZeroColIndex = 0
+
     companion object {
         private const val BEST_TIME_KEY = "BEST_TIME_KEY"
     }
 
     constructor(context: Context, boardSize : Int) {
         this.boardSize = boardSize
-        newBoard(boardSize)
+        this.initialBoard = newBoard(boardSize)
         Log.w("test", "BoardSize: $boardSize")
 
         val pref = context.getSharedPreferences("XYZ", Context.MODE_PRIVATE)
@@ -32,12 +40,14 @@ class Game {
     }
 
     // Creates a 2d array of shuffled numbers from 0 to 8 inclusive
-    private fun newBoard( size : Int ) {
+    private fun newBoard( size : Int ) : Array<Array<Int>> {
         val list = (0..<size*size).toList().shuffled()
         val idxZero = list.indexOf(0)
         zeroRowIndex = idxZero/size
         zeroColIndex = idxZero%size
         board = Array( size ) { i -> Array(size){ j -> list[size * i + j] } }
+
+        return Array( size ) { i -> Array(size){ j -> list[size * i + j] } }
 
         // to print the board's values
         /*for(i in board.indices) {
@@ -149,8 +159,19 @@ class Game {
         saveBestTime(context)
     }
 
+    private fun resetBoard() {
+        for (i in board.indices) {
+            for (j in board.indices) {
+                board[i][j] = initialBoard[i][j]
+            }
+        }
+        zeroRowIndex = initialZeroRowIndex
+        zeroColIndex = initialZeroColIndex
+    }
+
     fun resetGame() {
-        newBoard(boardSize)
+        gameStarted = false
+        resetBoard()
     }
 
     fun getRowIdx() : Int {
@@ -159,5 +180,10 @@ class Game {
 
     fun getColIdx() : Int {
         return zeroColIndex
+    }
+
+    fun setZeroIndices(row: Int, col: Int) {
+        initialZeroRowIndex = row
+        initialZeroColIndex = col
     }
 }

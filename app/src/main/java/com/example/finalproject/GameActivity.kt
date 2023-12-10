@@ -31,6 +31,8 @@ class GameActivity : AppCompatActivity() {
     private lateinit var timeTv : TextView
     private lateinit var bestTimeTv : TextView
 
+    private lateinit var gridTvs : Array<Array<TextView?>>
+
     private lateinit var detector: GestureDetector
     private var statusBarHeight : Int = 0
     private var gameSize : Int = 0
@@ -47,6 +49,12 @@ class GameActivity : AppCompatActivity() {
         resetBtn = findViewById(R.id.btn_reset)
         timeTv = findViewById(R.id.time_tv)
         bestTimeTv = findViewById(R.id.best_time_tv)
+
+        gridTvs = Array(model.getBoardSize()) {
+            Array(model.getBoardSize()) {
+                null
+            }
+        }
 
         bestTimeTv.text = model.getBestTimeStr()
 
@@ -75,10 +83,14 @@ class GameActivity : AppCompatActivity() {
 
             for (j in 0 until gameGl.rowCount) {
                 val text = TextView(this)
+
+                gridTvs[i][j] = text
+
                 if(model.getValueAt(i, j) != 0) {
                     text.text = model.getValueAt(i, j).toString()
                 } else {
                     text.text = ""
+                    model.setZeroIndices(i, j)
                 }
 
                 // Customize button properties if needed
@@ -106,25 +118,40 @@ class GameActivity : AppCompatActivity() {
 
     private fun initOnClickListeners() {
         startBtn.setOnClickListener {
-            timer.start()
+            if (!model.gameStarted) {
+                model.gameStarted = true
+                timer.start()
+            }
         }
 
         resetBtn.setOnClickListener {
-            // there may be a better way to reset timer
             model.resetGame()
-            // TODO the grid needs to be updated
+            resetGrid()
             timer.cancel()
             timer.onFinish()
             initTimer()
         }
 
         timeTv.doOnTextChanged { text, _, _, _ ->
-//            Log.d("TESTING", "text changed $text")
             model.updateTime(text.toString())
         }
     }
 
-    fun initTimer() {
+    private fun resetGrid() {
+        for (i in gridTvs.indices) {
+            for (j in gridTvs.indices) {
+                val tv = gridTvs[i][j]!!
+
+                tv.text = if (model.getValueAt(i, j) != 0) {
+                    "${model.getValueAt(i, j)}"
+                } else {
+                    ""
+                }
+            }
+        }
+    }
+
+    private fun initTimer() {
         val timerDurationMillis: Long = 6000000000
 
         timer = object : CountDownTimer(timerDurationMillis, 1000) {
@@ -143,7 +170,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        if( event != null )
+        if( event != null && model.gameStarted)
             detector.onTouchEvent( event )
         return super.onTouchEvent(event)
     }
@@ -159,9 +186,9 @@ class GameActivity : AppCompatActivity() {
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             if (e1 != null) {
-                val horizontalDist : Float = e2.x - e1.x
-                val verticalDist : Float = e2.y - e1.y
-                val direction : String = if (abs(horizontalDist) > abs(verticalDist)) {
+                val horizontalDist: Float = e2.x - e1.x
+                val verticalDist: Float = e2.y - e1.y
+                val direction: String = if (abs(horizontalDist) > abs(verticalDist)) {
                     if (horizontalDist > 0) "RIGHT" else "LEFT"
                 } else {
                     if (verticalDist > 0) "DOWN" else "UP"
@@ -172,9 +199,11 @@ class GameActivity : AppCompatActivity() {
                 var oldColIdx = model.getColIdx()
                 if (model.makeMove(direction)) {
                     Log.w("test", "MOVE SUCCESS")
-                    var textSwap : TextView = gameGl.findViewById<TextView>(oldRowIdx * gameSize + oldColIdx)
+                    var textSwap: TextView =
+                        gameGl.findViewById(oldRowIdx * gameSize + oldColIdx)
                     textSwap.text = model.getValueAt(oldRowIdx, oldColIdx).toString()
-                    var textZero : TextView = gameGl.findViewById<TextView>(model.getRowIdx() * gameSize + model.getColIdx())
+                    var textZero: TextView =
+                        gameGl.findViewById(model.getRowIdx() * gameSize + model.getColIdx())
                     textZero.text = ""
 
                 } else {
@@ -191,7 +220,6 @@ class GameActivity : AppCompatActivity() {
                 userWon()
                 bestTimeTv.text = model.getBestTimeStr()
             }
-
             return super.onFling(e1, e2, velocityX, velocityY)
         }
     }
