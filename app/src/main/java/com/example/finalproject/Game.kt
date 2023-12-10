@@ -1,5 +1,6 @@
 package com.example.finalproject
 
+import android.content.Context
 import android.util.Log
 
 class Game {
@@ -7,20 +8,31 @@ class Game {
     private var boardSize : Int
     private lateinit var board : Array<Array<Int>>
 
+    var currTime = 0
+    var bestTime = 0
+        private set
+
     // 0 is the empty square. keeping track of its
     // index makes it easier to figure out what values we need to swap.
     // We need to update these indexes after each swap
     private var zeroRowIndex : Int = 0
     private var zeroColIndex : Int = 0
 
-    constructor( boardSize : Int ) {
+    companion object {
+        private const val BEST_TIME_KEY = "BEST_TIME_KEY"
+    }
+
+    constructor(context: Context, boardSize : Int) {
         this.boardSize = boardSize
         newBoard(boardSize)
         Log.w("test", "BoardSize: $boardSize")
+
+        val pref = context.getSharedPreferences("XYZ", Context.MODE_PRIVATE)
+        bestTime = pref.getInt(BEST_TIME_KEY, 0)
     }
 
     // Creates a 2d array of shuffled numbers from 0 to 8 inclusive
-    fun newBoard( size : Int ) {
+    private fun newBoard( size : Int ) {
         val list = (0..<size*size).toList().shuffled()
         val idxZero = list.indexOf(0)
         zeroRowIndex = idxZero/size
@@ -50,6 +62,42 @@ class Game {
 
     fun getValueAt(row: Int, col: Int) : Int {
         return board[row][col]
+    }
+
+
+    fun updateTime(time: String) {
+        currTime = timeStrToInt(time)
+    }
+    private fun saveBestTime(context: Context) {
+        if (currTime > bestTime) {
+            val pref = context.getSharedPreferences("XYZ", Context.MODE_PRIVATE).edit()
+            pref.putInt(BEST_TIME_KEY, currTime)
+            pref.apply()
+
+            bestTime = currTime
+        }
+    }
+
+    private fun timeStrToInt(time: String) : Int {
+        val arr = time.split(":")
+        return arr[0].toInt() * 60 + arr[1].toInt()
+    }
+
+    // returns the best time as a string, to update the bestTimeTv in GameActivity.
+    // Todo: need to call this when user wins, will update when that's all sorted out
+    fun getBestTimeStr() : String {
+        var hr = "${bestTime / 60}"
+        var sec = "${bestTime % 60}"
+
+        if (hr.length < 2) {
+            hr += "0"
+        }
+
+        if (sec.length < 2) {
+            sec = "0$sec"
+        }
+
+        return "$hr:$sec"
     }
 
     // Attempts to move a piece in the given direction to the empty spot
@@ -93,6 +141,15 @@ class Game {
                 num++
             }
         }
+
         return true
+    }
+
+    fun userWon(context: Context) {
+        saveBestTime(context)
+    }
+
+    fun resetGame() {
+        newBoard(boardSize)
     }
 }

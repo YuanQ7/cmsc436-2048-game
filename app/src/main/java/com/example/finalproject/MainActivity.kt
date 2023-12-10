@@ -41,12 +41,10 @@ class MainActivity : AppCompatActivity() {
                     // 5x5
                     5
                 }
-                model = Game(boardSize)
+                model = Game(this, boardSize)
                 // start GameActivity
                 startActivity(Intent(this, GameActivity::class.java))
             }
         }
     }
-
-
 }
